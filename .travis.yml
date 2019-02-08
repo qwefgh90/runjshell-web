@@ -19,4 +19,4 @@ before_script:
   - npm install -g @angular/cli
 
 script:
-  - ng test -watch false -browsers ChromeHeadless
+  - ng test --watch false --browsers ChromeHeadless
