@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewChecked } from '@angular/core';
 import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import { ResizeEvent } from 'angular-resizable-element';
+import { Subject } from 'rxjs';
 
 export const minTermWidth = 100;
 export const minTermHeight = 100;
@@ -13,6 +14,7 @@ export const minTermHeight = 100;
 })
 export class AppComponent implements OnInit, AfterViewChecked {
   title = 'Online JShell';
+  keyInput: Subject<string> = new Subject<string>();
   term: Terminal;
   h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   style: object = { height: (this.h / 2) + 'px' };
@@ -32,6 +34,12 @@ export class AppComponent implements OnInit, AfterViewChecked {
     this.term = new Terminal();
     this.term.open(document.getElementById('terminal'));
     this.term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ')
+    this.term.on('data', (input) => {
+      this.keyInput.next(input);
+      // console.log(input);
+    })
+    this.term.on('key', (key, event) => {
+    })    
   }
 
   /**

@@ -77,4 +77,42 @@ describe('AppComponent', () => {
     expect(beforeRows).not.toBe(afterRows);
     expect(beforeCols).not.toBe(afterCols);
   })
+
+  function keydown(char: string){
+    const init = {key: char, keyCode: '68'};
+    return new KeyboardEvent('keydown', init);
+  }
+
+  it('should type inputs through terminal', (done: DoneFn) => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app: AppComponent = fixture.debugElement.componentInstance;
+    const compiled = fixture.debugElement.nativeElement;
+    fixture.detectChanges()
+
+    const terminalEventConsumer = compiled.querySelector('#terminal').getElementsByTagName('textarea')[0]
+    const input = ['h','i','!','\n'];
+    const arrToReceive = [];
+    app.keyInput.subscribe(v => {
+      arrToReceive.push(v);
+      if(arrToReceive.length == input.length){
+        const decide = input.map((v, i , arr) => {
+          if(v == arr[i]){
+            return true;
+          }else
+            return false;
+        });
+        if(decide.every((v) => v)){
+          done();
+        }else{
+          fail('inputs aren\'t expected. ' + arrToReceive.toString());
+        }
+      }
+    })
+
+    input.forEach((v) => {
+      terminalEventConsumer.dispatchEvent(keydown(v));
+    })
+    fixture.detectChanges()
+
+  })
 });
