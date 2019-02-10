@@ -9,7 +9,6 @@ export class WebsocketService {
   websocket(url){
     return new RxWebsocket(url) 
   }
-
 }
 
 export class RxWebsocket {

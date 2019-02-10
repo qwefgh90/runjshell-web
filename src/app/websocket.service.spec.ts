@@ -22,7 +22,7 @@ describe('WebsocketService', () => {
     let open: Observable<Event> = ws.onOpen
     error.subscribe((e) => {
       let readyState: number = ws.readyState();
-      expect(readyState).toBe(3)
+      expect(readyState).toBe(WebSocket.CLOSED)
       done()
     })
   })
@@ -39,7 +39,7 @@ describe('WebsocketService', () => {
     let readyState: number = ws.readyState();
     open.subscribe((e) => {
       let readyState: number = ws.readyState();
-      expect(readyState).toBe(1)
+      expect(readyState).toBe(WebSocket.OPEN)
       done()
     })
   })

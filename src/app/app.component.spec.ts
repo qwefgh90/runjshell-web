@@ -3,6 +3,10 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent, minTermHeight, minTermWidth } from './app.component';
 import { ResizableModule } from 'angular-resizable-element';
 import { ResizeEvent } from 'angular-resizable-element';
+import { RxWebsocket, WebsocketService } from './websocket.service';
+import { Observable, Subject } from 'rxjs';
+import { detectChanges } from '@angular/core/src/render3';
+import { environment } from 'src/environments/environment';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -90,18 +94,18 @@ describe('AppComponent', () => {
     fixture.detectChanges()
 
     const terminalEventConsumer = compiled.querySelector('#terminal').getElementsByTagName('textarea')[0]
-    const input = ['h','i','!','\n'];
+    const inputToType = ['h','i','!','\n'];
     const arrToReceive = [];
     app.keyInput.subscribe(v => {
       arrToReceive.push(v);
-      if(arrToReceive.length == input.length){
-        const decide = input.map((v, i , arr) => {
-          if(v == arr[i]){
+      if(arrToReceive.length == inputToType.length){
+        const trueOrFalseList = inputToType.map((v, i) => {
+          if(v == arrToReceive[i]){
             return true;
           }else
             return false;
         });
-        if(decide.every((v) => v)){
+        if(trueOrFalseList.every((v) => v)){
           done();
         }else{
           fail('inputs aren\'t expected. ' + arrToReceive.toString());
@@ -109,10 +113,46 @@ describe('AppComponent', () => {
       }
     })
 
-    input.forEach((v) => {
+    inputToType.forEach((v) => {
       terminalEventConsumer.dispatchEvent(keydown(v));
     })
     fixture.detectChanges()
 
+  })
+
+  it('should connect with websocket service', (done: DoneFn) => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app: AppComponent = fixture.debugElement.componentInstance;
+    let url = 'ws://echo.websocket.org/'
+    let ws: RxWebsocket = app.connect(url);
+    ws.onOpen.subscribe(e => {
+      expect(ws.readyState()).toBe(WebSocket.OPEN);
+      done();
+    });
+  })
+
+  it('should receive inital banner', (done: DoneFn) => {
+    //this is fake server with echo server
+    //environment.backend = 'ws://echo.websocket.org/'
+    const fixture = TestBed.createComponent(AppComponent);
+    const app: AppComponent = fixture.debugElement.componentInstance;
+    const expectedBanner = "Welcome to RunJShell!";
+    fixture.detectChanges();
+    app.connectWithTerminal(app.connect('ws://echo.websocket.org/'), app.term, app.keyInput);
+    let arr = []; 
+    app.ws.onOpen.subscribe(e => {
+      if (app.ws.readyState() == WebSocket.OPEN) {
+        app.ws.onMessage.subscribe(me => {
+          arr.push(me.data);
+          if (arr.join('').length == expectedBanner.length) {
+            expect(arr.join('')).toBe(expectedBanner);
+            done();
+          }
+        });
+        //this message is sent from fake server wich echo server
+        app.ws.send(expectedBanner);
+      }
+    });
+    
   })
 });
