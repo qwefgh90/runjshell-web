@@ -1,12 +1,13 @@
-import { TestBed, async } from '@angular/core/testing';
+import { TestBed, async, fakeAsync, tick } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent, minTermHeight, minTermWidth } from './app.component';
 import { ResizableModule } from 'angular-resizable-element';
 import { ResizeEvent } from 'angular-resizable-element';
 import { RxWebsocket, WebsocketService } from './websocket.service';
 import { Observable, Subject } from 'rxjs';
-import { detectChanges } from '@angular/core/src/render3';
+import { detectChanges  } from '@angular/core/src/render3';
 import { environment } from 'src/environments/environment';
+import { Message } from './model/message';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -136,23 +137,44 @@ describe('AppComponent', () => {
     //environment.backend = 'ws://echo.websocket.org/'
     const fixture = TestBed.createComponent(AppComponent);
     const app: AppComponent = fixture.debugElement.componentInstance;
-    const expectedBanner = "Welcome to RunJShell!";
+    const expectedBanner = {type: 'print', msg: "Welcome to RunJShell!"};;
     fixture.detectChanges();
     app.connectWithTerminal(app.connect('ws://echo.websocket.org/'), app.term, app.keyInput);
     let arr = []; 
     app.ws.onOpen.subscribe(e => {
       if (app.ws.readyState() == WebSocket.OPEN) {
         app.ws.onMessage.subscribe(me => {
-          arr.push(me.data);
-          if (arr.join('').length == expectedBanner.length) {
-            expect(arr.join('')).toBe(expectedBanner);
+          let msg = JSON.parse(me.data) as Message
+          if (msg.msg.length == expectedBanner.msg.length) {
+            expect(msg.msg).toBe(expectedBanner.msg);
             done();
           }
         });
         //this message is sent from fake server wich echo server
-        app.ws.send(expectedBanner);
+        app.ws.send(JSON.stringify(expectedBanner));
       }
     });
-    
   })
+
+  // it('should receive a message and update UI', async(() => {
+  //   const fixture = TestBed.createComponent(AppComponent);
+  //   const app: AppComponent = fixture.debugElement.componentInstance;
+  //   let msg = {type: 'print', msg: 'hello'};
+  //   app.connectWithTerminal(app.connect('ws://echo.websocket.org/'), app.term, app.keyInput);
+  //   fixture.detectChanges();
+  //   app.ws.onOpen.subscribe(e => {
+  //     if (app.ws.readyState() == WebSocket.OPEN) { 
+  //       app.ws.send(JSON.stringify(msg));
+  //     }
+  //   });
+
+  //   fixture.whenStable().then(() => {
+  //     fixture.detectChanges();
+  //     app.term.selectAll();
+  //     fixture.detectChanges();
+  //     //console.debug(me.data);
+  //     console.debug(app.term.getSelection());
+  //     expect(app.term.getSelection().indexOf(msg.msg) != -1 ).toBeTruthy();
+  //   }
+  // )}));
 });

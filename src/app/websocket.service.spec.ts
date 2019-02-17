@@ -11,7 +11,7 @@ describe('WebsocketService', () => {
     expect(service).toBeTruthy();
   });
   
-  it('should make connection between websocket and server', (done: DoneFn) => {
+  it('fail to make connection between websocket and server', (done: DoneFn) => {
     const service: WebsocketService = TestBed.get(WebsocketService);
     expect(service).toBeTruthy();
     let url = 'ws://example.com/ex'
@@ -27,7 +27,7 @@ describe('WebsocketService', () => {
     })
   })
 
-  it('should make a connection between websocket and echo server', (done: DoneFn) => {
+  it('should make a connection between websocket and echo server and close', (done: DoneFn) => {
     const service: WebsocketService = TestBed.get(WebsocketService);
     expect(service).toBeTruthy();
     let url = 'ws://echo.websocket.org/'
@@ -40,31 +40,12 @@ describe('WebsocketService', () => {
     open.subscribe((e) => {
       let readyState: number = ws.readyState();
       expect(readyState).toBe(WebSocket.OPEN)
-      done()
-    })
-  })
-
-  it('should make a connection between websocket and echo server', (done: DoneFn) => {
-    const service: WebsocketService = TestBed.get(WebsocketService);
-    expect(service).toBeTruthy();
-    let url = 'ws://echo.websocket.org/'
-    let ws = service.websocket(url)
-    let error: Observable<Event> = ws.onError 
-    let close: Observable<CloseEvent> = ws.onClose
-    let message: Observable<MessageEvent> = ws.onMessage
-    let open: Observable<Event> = ws.onOpen
-    let readyState: number = ws.readyState();
-    message.subscribe((e) => {
       ws.close();
-      readyState = ws.readyState();
-      expect(readyState).toBe(2)
-      done()
     })
-
-    open.subscribe((e) => {
+    close.subscribe((e) => {
       let readyState: number = ws.readyState();
-      expect(readyState).toBe(1)
-      ws.send('something')
+      expect(readyState).toBe(WebSocket.CLOSED);
+      done();
     })
   })
 
@@ -87,4 +68,5 @@ describe('WebsocketService', () => {
       done()
     })
   })
+
 });

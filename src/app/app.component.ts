@@ -4,9 +4,8 @@ import * as fit from 'xterm/lib/addons/fit/fit';
 import { ResizeEvent } from 'angular-resizable-element';
 import { Subject } from 'rxjs';
 import { WebsocketService, RxWebsocket } from './websocket.service';
-import { connect } from 'tls';
 import { environment } from 'src/environments/environment';
-import { WSAEACCES } from 'constants';
+import { Message } from './model/message';
 
 export const minTermWidth = 100;
 export const minTermHeight = 100;
@@ -60,7 +59,10 @@ export class AppComponent implements OnInit, AfterViewChecked {
           ws.send(input);
         })
         ws.onMessage.subscribe(e => {
-          term.write(e.data);
+          let msg = JSON.parse(e.data) as Message
+          if(msg.type == 'print'){
+            term.write(msg.msg);
+          }
         })
       }
     });
